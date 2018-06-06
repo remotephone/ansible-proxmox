@@ -1,0 +1,7 @@
+---
+
+NASUSER: username
+naspassword: password
+NAS_IP: nasip
+NAS_DIR: NAS
+MOUNT_PT: /mount/point

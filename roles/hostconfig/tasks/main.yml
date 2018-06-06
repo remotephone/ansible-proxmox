@@ -1,0 +1,71 @@
+---
+
+- name: add proxmox gpg key
+  apt_key:
+    url: "http://download.proxmox.com/debian/proxmox-ve-release-5.x.gpg"
+    state: present
+
+- name: Removing proxmox enterprise repository file
+  file:
+    path: /etc/apt/sources.list.d/pve-enterprise.list
+    state: absent
+
+- name: Adding proxmox free repo
+  lineinfile:
+    dest: /etc/apt/sources.list.d/pve-install-repo.list
+    line: 'deb http://download.proxmox.com/debian/pve stretch pve-no-subscription'
+    create: yes
+    owner: root
+    group: root
+    mode: 0644
+
+
+- name: install openvswitch
+  apt:
+    name: openvswitch-switch
+    update_cache: yes
+    cache_valid_time: 3600
+    state: present
+
+- name: configure NAS
+  mount:
+    state: present
+    fstype: cifs
+    opts: rw,username={{ NASUSER }},password={{ NASPASSWORD }},vers=2.0
+    src: //{{ NAS_IP }}/{{ NAS_DIR }}
+    name: "{{ MOUNT_PT }}"
+
+- name: Enable ipv4 Forwarding in /etc/sysctl.conf
+  lineinfile:
+    dest:  /etc/sysctl.conf
+    regexp: '^net\.ipv4\.ip\_forward\=1.*$'
+    line: 'net.ipv4.ip_forward=1'
+
+- blockinfile: |
+    dest=/etc/sysctl.conf
+    content="# disable ipv6
+      net.ipv6.conf.all.disable_ipv6 = 1
+      net.ipv6.conf.default.disable_ipv6 = 1
+      net.ipv6.conf.lo.disable_ipv6 = 1
+      # increase max_user_instances to allow more containers
+      fs.inotify.max_user_instances = 1024"
+
+- name: get the name of the second interface so we can work with it
+  set_fact:
+    second_nic: "{{ ansible_interfaces | difference(['lo',ansible_default_ipv4.alias]) | last }}"
+
+- name: wut
+  set_fact:
+    second_mac: "{{ hostvars[inventory_hostname]['ansible_' + second_nic]['macaddress'] }}"
+
+- name: Conveniently rename interfaces
+  lineinfile:
+    dest: /etc/udev/rules.d/10-network.rules
+    regexp: 'SUBSYSTEM=="net", ACTION=="add", ATTR{address}=="{{ second_mac }}", NAME="eno2"'
+    line: 'SUBSYSTEM=="net", ACTION=="add", ATTR{address}=="{{ second_mac }}", NAME="eno2"'
+    create: yes
+
+- name: upgrade distribution
+  apt:
+    update_cache: yes
+    upgrade: dist
