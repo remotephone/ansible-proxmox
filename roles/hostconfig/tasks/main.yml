@@ -69,3 +69,7 @@
   apt:
     update_cache: yes
     upgrade: dist
+
+- name: reboot servers
+  reboot:
+  msg: 
