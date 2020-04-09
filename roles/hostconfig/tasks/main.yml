@@ -41,20 +41,33 @@
     regexp: '^net\.ipv4\.ip\_forward\=1.*$'
     line: 'net.ipv4.ip_forward=1'
 
-- blockinfile: |
-    dest=/etc/sysctl.conf
-    content="# disable ipv6
+- name: Configure ipv6 off
+  blockinfile:
+    dest: /etc/sysctl.conf
+    insertafter: EOF
+    block: |
+      # disable ipv6
       net.ipv6.conf.all.disable_ipv6 = 1
       net.ipv6.conf.default.disable_ipv6 = 1
       net.ipv6.conf.lo.disable_ipv6 = 1
       # increase max_user_instances to allow more containers
-      fs.inotify.max_user_instances = 1024"
+      fs.inotify.max_user_instances = 1024
 
 - name: get the name of the second interface so we can work with it
   set_fact:
     second_nic: "{{ ansible_interfaces | difference(['lo',ansible_default_ipv4.alias]) | last }}"
 
-- name: wut
+- name: Configure /etc/modules to load modules for docker swarm
+  blockinfile:
+    dest: /etc/modules
+    insertafter: EOF
+    block: | 
+      aufs
+      overlay
+      br_netfilter
+      ip_vs
+
+- name: Look at this awful mess to get my macs
   set_fact:
     second_mac: "{{ hostvars[inventory_hostname]['ansible_' + second_nic]['macaddress'] }}"
 
