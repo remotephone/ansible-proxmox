@@ -2,7 +2,7 @@
 
 - name: add proxmox gpg key
   apt_key:
-    url: "http://download.proxmox.com/debian/proxmox-ve-release-5.x.gpg"
+    url: "http://download.proxmox.com/debian/proxmox-ve-release-6.x.gpg"
     state: present
 
 - name: Removing proxmox enterprise repository file
@@ -13,7 +13,7 @@
 - name: Adding proxmox free repo
   lineinfile:
     dest: /etc/apt/sources.list.d/pve-install-repo.list
-    line: 'deb http://download.proxmox.com/debian/pve stretch pve-no-subscription'
+    line: 'deb http://download.proxmox.com/debian/pve buster pve-no-subscription'
     create: yes
     owner: root
     group: root
