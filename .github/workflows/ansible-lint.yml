@@ -47,3 +47,5 @@ jobs:
         #                         repeatable.
         #   -c C                  Specify configuration file to use. Defaults to ".ansible-lint"
         args: "-q"
+        override-deps: |
+           rich>=9.5.1,<11.0.0
