@@ -2,6 +2,8 @@
 
 - name: install python 2
   raw: test -e /usr/bin/python || (apt -y update && apt install -y python-minimal)
+  register: myoutput
+  changed_when: myoutput.rc != 0
 
 - name: now gather_facts
   setup:

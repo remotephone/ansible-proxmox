@@ -1,7 +1,7 @@
 ---
 
-NASUSER: username
-NASPASSWORD: password
-NAS_IP: nasip
-NAS_DIR: NAS
-MOUNT_PT: /mount/point
+nasuser: username
+naspasswd: password
+nas_ip: nasip
+nas_dir: NAS
+mount_pt: /mount/point

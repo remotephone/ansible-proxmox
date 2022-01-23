@@ -6,7 +6,7 @@
     state: present
 
 - name: Removing proxmox enterprise repository file
-  file:
+  ansible.builtin.file:
     path: /etc/apt/sources.list.d/pve-enterprise.list
     state: absent
 
@@ -22,7 +22,7 @@
     state: present
 
 - name: install openvswitch
-  apt:
+  ansible.builtin.apt:
     name: openvswitch-switch
     update_cache: yes
     cache_valid_time: 3600
@@ -32,18 +32,18 @@
   mount:
     state: present
     fstype: cifs
-    opts: rw,username={{ NASUSER }},password={{ NASPASSWORD }},vers=2.0
-    src: //{{ NAS_IP }}/{{ NAS_DIR }}
-    name: "{{ MOUNT_PT }}"
+    opts: rw,username={{ nasuser }},password={{ naspasswd }},vers=2.0
+    src: //{{ nas_ip }}/{{ nas_dir }}
+    name: "{{ mount_pt }}"
 
 - name: Enable ipv4 Forwarding in /etc/sysctl.conf
-  lineinfile:
+  ansible.builtin.lineinfile:
     dest:  /etc/sysctl.conf
     regexp: '^net\.ipv4\.ip\_forward\=1.*$'
     line: 'net.ipv4.ip_forward=1'
 
 - name: Configure ipv6 off
-  blockinfile:
+  ansible.builtin.blockinfile:
     dest: /etc/sysctl.conf
     insertafter: EOF
     block: |
@@ -55,11 +55,11 @@
       fs.inotify.max_user_instances = 1024
 
 - name: get the name of the second interface so we can work with it
-  set_fact:
+  ansible.builtin.set_fact:
     second_nic: "{{ ansible_interfaces | difference(['lo',ansible_default_ipv4.alias]) | last }}"
 
 - name: Configure /etc/modules to load modules for docker swarm
-  blockinfile:
+  ansible.builtin.blockinfile:
     dest: /etc/modules
     insertafter: EOF
     block: | 
@@ -73,17 +73,19 @@
     second_mac: "{{ hostvars[inventory_hostname]['ansible_' + second_nic]['macaddress'] }}"
 
 - name: Conveniently rename interfaces
-  lineinfile:
+  ansible.builtin.lineinfile:
     dest: /etc/udev/rules.d/10-network.rules
     regexp: 'SUBSYSTEM=="net", ACTION=="add", ATTR{address}=="{{ second_mac }}", NAME="eno2"'
     line: 'SUBSYSTEM=="net", ACTION=="add", ATTR{address}=="{{ second_mac }}", NAME="eno2"'
     create: yes
+    owner: root
+    group: root
+    mode: '0644'
 
 - name: upgrade distribution
-  apt:
+  ansible.builtin.apt:
     update_cache: yes
     upgrade: dist
 
 - name: reboot servers
   reboot:
-  msg: 
